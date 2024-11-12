@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers.v1
 {
     /// <summary>
-    /// Camada Controllador da Autenticação
+    /// Camada Controllador da Autenticacao
     /// </summary>
+    /// <seealso cref="ControllerBase" />
     [Route("api/v1/authentication")]
     [ApiController]
     public class AuthenticationController : ControllerBase
@@ -15,9 +16,9 @@ namespace Api.Controllers.v1
         private readonly IAuthService _authService;
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="AuthenticationController"/> class.
         /// </summary>
-        /// <param name="service"></param>
+        /// <param name="service">The service.</param>
         public AuthenticationController(IAuthService service)
         {
             _authService = service;
@@ -29,16 +30,11 @@ namespace Api.Controllers.v1
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
+        [ProducesResponseType(typeof(CustomResponse<AuthenticationResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status401Unauthorized)]
+        [Produces("application/json")]
         public async Task<IActionResult> GetToken([FromBody] AuthenticationRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                return this.Error(
-                    modelStateDictionary: ModelState,
-                    code: StatusCodes.Status400BadRequest
-                );
-            }
-
             var result = await _authService.GenerateToken(request);
 
             if (string.IsNullOrEmpty(result.Token))

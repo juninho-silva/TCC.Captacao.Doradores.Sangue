@@ -12,7 +12,7 @@ namespace Api.Services.v1.Interfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<bool> Create(DonorRequest request);
+        Task<DonorResponse> Create(DonorRequest request);
         /// <summary>
         /// Responsavel por alterar um doador
         /// </summary>

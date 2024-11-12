@@ -18,12 +18,12 @@ namespace Api.Services.v1
         private readonly IMapper _mapper;
 
         /// <summary>
-        /// Construtor da Camada Servico Doador
+        /// Initializes a new instance of the <see cref="DonorService"/> class.
         /// </summary>
-        /// <param name="donorRepository"></param>
-        /// <param name="userRepository"></param>
-        /// <param name="logger"></param>
-        /// <param name="mapper"></param>
+        /// <param name="donorRepository">The donor repository.</param>
+        /// <param name="userRepository">The user repository.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="mapper">The mapper.</param>
         public DonorService(
             IDonorRepository donorRepository,
             IUserRepository userRepository,
@@ -41,7 +41,7 @@ namespace Api.Services.v1
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<bool> Create(DonorRequest request)
+        public async Task<DonorResponse> Create(DonorRequest request)
         {
             try
             {
@@ -50,12 +50,12 @@ namespace Api.Services.v1
                 donor.UserId = newuser.Id;
                 await _donorRepository.CreateAsync(donor);
 
-                return true;
+                return _mapper.Map<DonorResponse>(donor);
             }
             catch (ArgumentException err) when (err.Message.Contains("Usuário existente!"))
             {
                 _logger.LogWarning($"[{nameof(CampaignService)}] - {err.Message}");
-                return false;
+                return null;
             }
             catch (Exception err)
             {

@@ -1,4 +1,6 @@
-﻿using Api.DTOs.v1.Campaign.Requests;
+﻿using Api.DTOs.v1.Campaign;
+using Api.DTOs.v1.Campaign.Requests;
+using Api.Extentions;
 using Api.Services.v1.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +17,9 @@ namespace Api.Controllers.v1
         private readonly ICampaignService _campaignService;
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="CampaignController"/> class.
         /// </summary>
-        /// <param name="campaingService"></param>
+        /// <param name="campaingService">The campaing service.</param>
         public CampaignController(ICampaignService campaingService)
         {
             _campaignService = campaingService;
@@ -30,16 +32,23 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpPost()]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<CampaignResponse>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Post([FromBody] CampaignRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var result = await _campaignService.Create(request);
 
-            await _campaignService.Create(request);
+            if (result is null)
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { string.Empty, "Usuário já existente!" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
 
-            return Created(nameof(Post), new { message = "Campanha criado com sucesso!" });
+            return this.Success(result, StatusCodes.Status201Created);
         }
 
         /// <summary>
@@ -48,14 +57,23 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpGet()]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<List<CampaignResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Get()
         {
-            if (!ModelState.IsValid)
+            var result = await _campaignService.GetAll();
+
+            if (result is null)
             {
-                return BadRequest(ModelState);
+                return this.Success(
+                    data: result,
+                    code: StatusCodes.Status204NoContent
+                );
             }
 
-            return Ok(await _campaignService.GetAll());
+            return this.Success(result, code: StatusCodes.Status200OK);
         }
 
         /// <summary>
@@ -65,16 +83,34 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpGet("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<CampaignResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return BadRequest("O id é obrigatório!");
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Necessário informar o id" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
             }
 
             var result = await _campaignService.GetById(id);
 
-            return Ok(result);
+            if (result is null)
+            {
+                return this.Success(
+                    data: result,
+                    code: StatusCodes.Status204NoContent
+                );
+            }
+
+            return this.Success(result, code: StatusCodes.Status200OK);
         }
 
         /// <summary>
@@ -85,21 +121,40 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpPut("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Put([FromRoute] string id, [FromBody] CampaignRequest request)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return BadRequest("O id é obrigatório!");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Necessário informar o id" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
             }
 
             var result = await _campaignService.Update(id, request);
 
-            return Ok(result);
+            if (!result)
+            {
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Id informado não encontrado" }
+                    },
+                    code: StatusCodes.Status404NotFound
+                );
+            }
+
+            return this.Success(
+                data: result,
+                code: StatusCodes.Status200OK
+            );
         }
 
         /// <summary>
@@ -109,21 +164,40 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpDelete("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return BadRequest("O id é obrigatório!");
+                this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Necessário informar o id" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
             }
 
             var result = await _campaignService.Delete(id);
 
             if (result)
             {
-                return Ok(new { message = "Deletado com sucesso!" });
+                return this.Success(
+                    data: result,
+                    code: StatusCodes.Status200OK
+                );
             }
 
-            return BadRequest(new { message = "Id informado não encontrado" });
+            return this.Error(
+                messageError: new Dictionary<string, string>
+                {
+                    { nameof(id), "Id informado não encontrado" }
+                },
+                code: StatusCodes.Status404NotFound
+            );
         }
     }
 }

@@ -31,16 +31,19 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpPost()]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(CustomResponse<OrganizationResponse>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Post([FromBody] OrganizationRequest request)
         {
             var result = await _organizationService.Create(request);
 
             if (result is null)
                 return this.Error(
-                    messageError: new Dictionary<string, string> 
-                    { 
-                        { string.Empty, "Usuário já existente!" } 
-                    }, 
+                    messageError: new Dictionary<string, string>
+                    {
+                        { string.Empty, "Usuário já existente!" }
+                    },
                     code: StatusCodes.Status400BadRequest
                 );
 
@@ -48,15 +51,19 @@ namespace Api.Controllers.v1
         }
 
         /// <summary>
-        /// Endpoint responsavel por obter as organizaçao
+        /// Endpoint responsavel por obter as organizaçoes
         /// </summary>
         /// <returns></returns>
         [HttpGet()]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<List<OrganizationResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Get()
         {
             var result = await _organizationService.GetAll();
-            
+
             if (result is null)
             {
                 return this.Success(
@@ -75,6 +82,10 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpGet("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<OrganizationResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -109,6 +120,10 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpPut("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Put([FromRoute] string id, [FromBody] OrganizationRequest request)
         {
             if (string.IsNullOrEmpty(id))
@@ -122,14 +137,23 @@ namespace Api.Controllers.v1
                 );
             }
 
-            var ok = await _organizationService.Update(id, request);
+            var result = await _organizationService.Update(id, request);
 
-            if (!ok)
+            if (!result)
             {
-                return BadRequest();
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Id informado não encontrado" }
+                    },
+                    code: StatusCodes.Status404NotFound
+                );
             }
 
-            return Ok(new { message = "Organização alterada com sucesso!" });
+            return this.Success(
+                data: result,
+                code: StatusCodes.Status200OK
+            );
         }
 
         /// <summary>
@@ -139,21 +163,40 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpDelete("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return BadRequest("O id é obrigatório!");
+                this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Necessário informar o id" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
             }
 
-            var ok = await _organizationService.Delete(id);
+            var result = await _organizationService.Delete(id);
 
-            if (ok)
+            if (result)
             {
-                return Ok(new { message = "Deletado com sucesso!" });
+                return this.Success(
+                    data: result,
+                    code: StatusCodes.Status200OK
+                );
             }
 
-            return BadRequest(new { error = "Id informado não encontrado" });
+            return this.Error(
+                messageError: new Dictionary<string, string>
+                {
+                    { nameof(id), "Id informado não encontrado" }
+                },
+                code: StatusCodes.Status404NotFound
+            );
         }
     }
 }

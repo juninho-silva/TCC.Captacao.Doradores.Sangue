@@ -13,7 +13,7 @@ namespace Api.Services.v1.Interfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<bool> Create(CampaignRequest request);
+        Task<CampaignResponse> Create(CampaignRequest request);
         /// <summary>
         /// Responsavel por alterar campanha
         /// </summary>

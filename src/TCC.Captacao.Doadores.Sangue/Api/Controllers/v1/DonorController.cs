@@ -1,4 +1,5 @@
 ﻿using Api.DTOs.v1.Donor;
+using Api.Extentions;
 using Api.Services.v1.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,16 +31,23 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpPost()]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(CustomResponse<DonorResponse>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Post([FromBody] DonorRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var result = await _donorService.Create(request);
 
-            await _donorService.Create(request);
+            if (result is null)
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { string.Empty, "Usuário já existente!" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
 
-            return Created(nameof(Post), new { message = "Doador criado com sucesso!" });
+            return this.Success(result, StatusCodes.Status201Created);
         }
 
         /// <summary>
@@ -48,14 +56,23 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpGet()]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<List<DonorResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Get()
         {
-            if (!ModelState.IsValid)
+            var result = await _donorService.GetAll();
+
+            if (result is null)
             {
-                return BadRequest(ModelState);
+                return this.Success(
+                    data: result,
+                    code: StatusCodes.Status204NoContent
+                );
             }
 
-            return Ok(await _donorService.GetAll());
+            return this.Success(result, code: StatusCodes.Status200OK);
         }
 
         /// <summary>
@@ -65,16 +82,34 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpGet("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<DonorResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return BadRequest("O id é obrigatório!");
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Necessário informar o id" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
             }
 
             var result = await _donorService.GetById(id);
 
-            return Ok(result);
+            if (result is null)
+            {
+                return this.Success(
+                    data: result,
+                    code: StatusCodes.Status204NoContent
+                );
+            }
+
+            return this.Success(result, code: StatusCodes.Status200OK);
         }
 
         /// <summary>
@@ -85,21 +120,40 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpPut("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Put([FromRoute] string id, [FromBody] DonorRequest request)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return BadRequest("O id é obrigatório!");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Necessário informar o id" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
             }
 
             var result = await _donorService.Update(id, request);
 
-            return Ok(result);
+            if (!result)
+            {
+                return this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Id informado não encontrado" }
+                    },
+                    code: StatusCodes.Status404NotFound
+                );
+            }
+
+            return this.Success(
+                data: result,
+                code: StatusCodes.Status200OK
+            );
         }
 
         /// <summary>
@@ -109,21 +163,40 @@ namespace Api.Controllers.v1
         /// <returns></returns>
         [HttpDelete("{id}")]
         [Authorize]
+        [ProducesResponseType(typeof(CustomResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return BadRequest(new { error = "Necessário informar o id" });
+                this.Error(
+                    messageError: new Dictionary<string, string>
+                    {
+                        { nameof(id), "Necessário informar o id" }
+                    },
+                    code: StatusCodes.Status400BadRequest
+                );
             }
 
             var result = await _donorService.Delete(id);
 
             if (result)
             {
-                return Ok(new { message = "Deletado com sucesso!" });
+                return this.Success(
+                    data: result,
+                    code: StatusCodes.Status200OK
+                );
             }
 
-            return BadRequest(new { error = "Id informado não encontrado" });
+            return this.Error(
+                messageError: new Dictionary<string, string>
+                {
+                    { nameof(id), "Id informado não encontrado" }
+                },
+                code: StatusCodes.Status404NotFound
+            );
         }
     }
 }
