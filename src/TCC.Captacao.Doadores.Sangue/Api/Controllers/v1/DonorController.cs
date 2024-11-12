@@ -16,9 +16,9 @@ namespace Api.Controllers.v1
         private readonly IDonorService _donorService;
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="DonorController"/> class.
         /// </summary>
-        /// <param name="donorService"></param>
+        /// <param name="donorService">The donor service.</param>
         public DonorController(IDonorService donorService)
         {
             _donorService = donorService;

@@ -6,15 +6,16 @@ using System.Diagnostics.CodeAnalysis;
 namespace Api.DTOs
 {
     /// <summary>
-    /// Validtion
+    /// Validate Model Filter
     /// </summary>
+    /// <seealso cref="IActionFilter" />
     [ExcludeFromCodeCoverage]
     public class ValidateModelFilter : IActionFilter
     {
         /// <summary>
-        /// On Action Executing
+        /// Called before the action executes, after model binding is complete.
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">The <see cref="T:Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext" />.</param>
         public void OnActionExecuting(ActionExecutingContext context)
         {
             if (!context.ModelState.IsValid)
@@ -38,9 +39,9 @@ namespace Api.DTOs
         }
 
         /// <summary>
-        /// On Action Executed
+        /// Called after the action executes, before the action result.
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">The <see cref="T:Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext" />.</param>
         public void OnActionExecuted(ActionExecutedContext context) { }
     }
 }

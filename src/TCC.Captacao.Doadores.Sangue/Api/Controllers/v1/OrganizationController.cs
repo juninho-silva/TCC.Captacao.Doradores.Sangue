@@ -16,9 +16,9 @@ namespace Api.Controllers.v1
         private readonly IOrganizationService _organizationService;
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="OrganizationController"/> class.
         /// </summary>
-        /// <param name="organizationService"></param>
+        /// <param name="organizationService">The organization service.</param>
         public OrganizationController(IOrganizationService organizationService)
         {
             _organizationService = organizationService;
