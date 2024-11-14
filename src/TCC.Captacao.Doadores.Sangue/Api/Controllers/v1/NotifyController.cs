@@ -35,7 +35,7 @@ namespace Api.Controllers.v1
         [ProducesResponseType(typeof(CustomResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
         [Produces("application/json")]
-        public IActionResult Send([FromRoute] NotificationRequest request)
+        public IActionResult Send([FromBody] NotificationRequest request)
         {
             _notificationService.ScheduleNotification(request);
             return this.Success(true, StatusCodes.Status200OK);
