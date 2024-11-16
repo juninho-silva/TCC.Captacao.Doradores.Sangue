@@ -59,7 +59,6 @@ namespace Api.Controllers.v1
         [Authorize]
         [ProducesResponseType(typeof(CustomResponse<List<CampaignResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(CustomResponse<>), StatusCodes.Status400BadRequest)]
         [Produces("application/json")]
         public async Task<IActionResult> Get()
         {
